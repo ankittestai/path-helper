@@ -28,161 +28,166 @@ const AstrologyMentorshipGame = () => {
     { id: 14, name: "The Eye of Kali", subtitle: "Destroy illusion. Cut to truth.", theme: "raw, fierce clarity, transformation", icon: "👁️" }
   ];
 
-  // Generate solutions using NVIDIA API
-  const generateSolutions = async (userDilemma) => {
-    setIsLoading(true);
+  const testAPI = async () => {
+    console.log('Testing NVIDIA API via proxy...');
     
     try {
-      // Test with just the first path initially
-      console.log('Testing API with first path only...');
-      const testPath = paths[0];
-      const testSolution = await generateSolutionForPath(testPath, userDilemma);
+      // You'll need to replace this with your backend URL
+     const PROXY_URL = 'https://path-helper.vercel.app/api/nvidia';
       
-      console.log('Test API call successful, generating all solutions...');
+      const testPayload = {
+        "model": "meta/llama-3.1-405b-instruct",
+        "messages": [{"role": "user", "content": "Hello, respond with just 'API working'"}],
+        "max_tokens": 50,
+        "temperature": 0.1
+      };
       
-      // If test succeeds, generate solutions for all paths (but limit concurrent requests)
-      const generatedSolutions = [];
+      console.log('Sending test request to proxy:', testPayload);
       
-      // Process in batches of 3 to avoid overwhelming the API
-      for (let i = 0; i < paths.length; i += 3) {
-        const batch = paths.slice(i, i + 3);
-        const batchSolutions = await Promise.all(
-          batch.map(async (path, index) => {
-            // Add delay between requests
-            await new Promise(resolve => setTimeout(resolve, index * 500));
-            const solution = await generateSolutionForPath(path, userDilemma);
-            return {
-              ...path,
-              solution: solution
-            };
-          })
-        );
-        generatedSolutions.push(...batchSolutions);
-        
-        // Small delay between batches
-        if (i + 3 < paths.length) {
-          await new Promise(resolve => setTimeout(resolve, 1000));
-        }
+      const response = await fetch(PROXY_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(testPayload)
+      });
+      
+      console.log('Response status:', response.status);
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Parsed response:', data);
+        alert(`API Test Success! Response: ${data.choices?.[0]?.message?.content || 'No content'}`);
+      } else {
+        const errorText = await response.text();
+        console.error('API Test Failed:', response.status, errorText);
+        alert(`API Test Failed: ${response.status} - ${errorText}`);
       }
       
-      setSolutions(generatedSolutions);
-      setCurrentStep(3);
     } catch (error) {
-      console.error('Error generating solutions:', error);
-      // Fallback to template solutions if API fails
-      const fallbackSolutions = paths.map(path => ({
-        ...path,
-        solution: getFallbackSolution(path.id)
-      }));
-      setSolutions(fallbackSolutions);
-      setCurrentStep(3);
+      console.error('API Test Error:', error);
+      alert(`Cannot connect to backend server. Please set up a proxy server first.\n\nError: ${error.message}`);
     }
-    
-    setIsLoading(false);
   };
 
   const generateSolutionForPath = async (path, dilemma) => {
-    const prompt = `You are an ancient mystic advisor drawing wisdom from Hindu mythology. A person is facing this dilemma: "${dilemma}"
+    // You'll need to replace this with your backend URL
+    const PROXY_URL = 'http://localhost:3001/api/nvidia'; // Replace with your backend
+    
+    const modelsToTry = [
+      "meta/llama-3.1-405b-instruct",
+      "meta/llama-3.1-70b-instruct", 
+      "meta/llama-3.1-8b-instruct",
+      "nvidia/llama-3.1-nemotron-70b-instruct"
+    ];
 
-You must provide guidance following the path of "${path.name}" - ${path.subtitle}
+    const prompt = `You are an ancient mystic advisor. A person faces this dilemma: "${dilemma}"
 
-The theme is: ${path.theme}
+Give guidance for the path of "${path.name}" - ${path.subtitle} (${path.theme}).
 
-Provide a thoughtful, practical solution that:
-1. Incorporates the mythological symbolism of this path
-2. Gives specific, actionable advice
-3. Maintains the mystical tone while being genuinely helpful
-4. Is 2-3 sentences long
+Provide 2-3 sentences of mystical but practical advice.`;
 
-Respond as if you are an wise oracle speaking directly to the seeker.`;
+    for (const model of modelsToTry) {
+      try {
+        console.log(`Trying model: ${model} for ${path.name}...`);
 
-    try {
-      console.log(`Making API request for ${path.name}...`);
-      console.log('Request payload:', {
-        "model": "meta/llama-4-maverick-17b-128e-instruct",
-        "messages": [{"role": "user", "content": prompt}],
-        "max_tokens": 512,
-        "temperature": 0.8,
-        "top_p": 0.9,
-        "frequency_penalty": 0.1,
-        "presence_penalty": 0.1,
-        "stream": false
-      });
+        const response = await fetch(PROXY_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            "model": model,
+            "messages": [{"role": "user", "content": prompt}],
+            "max_tokens": 200,
+            "temperature": 0.7
+          })
+        });
 
-      const response = await fetch("https://integrate.api.nvidia.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Authorization": "Bearer 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",
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          "model": "meta/llama-4-maverick-17b-128e-instruct",
-          "messages": [{"role": "user", "content": prompt}],
-          "max_tokens": 512,
-          "temperature": 0.8,
-          "top_p": 0.9,
-          "frequency_penalty": 0.1,
-          "presence_penalty": 0.1,
-          "stream": false
-        })
-      });
+        console.log(`${model} Response status:`, response.status);
 
-      console.log('Response status:', response.status);
-      console.log('Response headers:', response.headers);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('API Error Response:', errorText);
-        throw new Error(`API request failed: ${response.status} - ${errorText}`);
+        if (response.ok) {
+          const data = await response.json();
+          const content = data.choices?.[0]?.message?.content?.trim();
+          if (content) {
+            console.log(`Success with ${model}:`, content);
+            return content;
+          }
+        } else {
+          const errorText = await response.text();
+          console.log(`${model} failed:`, response.status, errorText);
+        }
+      } catch (error) {
+        console.log(`${model} error:`, error.message);
       }
-
-      const data = await response.json();
-      console.log('API Response data:', data);
-      
-      const content = data.choices?.[0]?.message?.content?.trim();
-      if (content) {
-        console.log(`Success for ${path.name}:`, content);
-        return content;
-      } else {
-        console.log('No content in response, using fallback');
-        return getFallbackSolution(path.id);
-      }
-    } catch (error) {
-      console.error(`Error generating solution for ${path.name}:`, error.message);
-      console.error('Full error:', error);
-      return getFallbackSolution(path.id);
     }
+    
+    console.log('All models failed or no backend available, using fallback');
+    return getFallbackSolution(path.id);
   };
 
   const getFallbackSolution = (pathId) => {
     const fallbackSolutions = {
-      1: `Your dilemma requires bold action. Like Agni's flame, burn through hesitation. Take that leap of faith - your passion will guide you through any obstacles.`,
-      2: `Patience, dear seeker. Like Shesha holding the universe, some things require time to unfold. Observe the patterns and trust in the process.`,
-      3: `Question everything you think you know about this situation. Maya's mirror shows that reality has layers. Look deeper than the surface.`,
-      4: `Your duty calls, warrior. Like Arjuna on the battlefield, face your responsibilities. Clarity comes through righteous action.`,
-      5: `Flow like water, adapt like the ocean. Don't force outcomes - work with the currents while maintaining your direction.`,
-      6: `Gather knowledge before you act. Consult mentors and understand all angles. Informed decisions create the strongest foundation.`,
-      7: `Step back from the noise and chaos. Create sacred space for reflection. Your inner voice holds the answer in stillness.`,
-      8: `Strike now while opportunity presents itself. Like Indra's lightning, decisive action creates power. Trust your judgment.`,
-      9: `Choose the path that brings beauty and prosperity. Trust that abundance is your birthright. Honor both practical needs and desires.`,
-      10: `Your gut feeling is speaking - listen to it. Beyond logic lies ancient wisdom. Trust this primal knowing above reasoning.`,
-      11: `It's time to build something new. Plan carefully, gather resources, and create step by step. Craft your solution with care.`,
-      12: `Do what is right, even if difficult. Your moral compass knows the answer. Choose integrity over convenience.`,
-      13: `Release your need to control the outcome. Time is your ally. Practice acceptance and let the universe provide clarity.`,
-      14: `Cut through all illusions and face the raw truth. Embrace transformation, however uncomfortable it may be.`
+      1: "Your dilemma requires bold action. Like Agni's flame, burn through hesitation and take that leap of faith.",
+      2: "Patience, dear seeker. Like Shesha holding the universe, some things require time to unfold. Trust in the process.",
+      3: "Question everything you think you know about this situation. Maya's mirror shows that reality has layers beyond the surface.",
+      4: "Your duty calls, warrior. Like Arjuna on the battlefield, face your responsibilities with courage and clarity.",
+      5: "Flow like water, adapt like the ocean. Work with the currents of change while maintaining your true direction.",
+      6: "Gather knowledge before you act. Consult mentors and understand all angles to build the strongest foundation.",
+      7: "Step back from the noise and chaos. Create sacred space for reflection where your inner voice can be heard.",
+      8: "Strike now while opportunity presents itself. Like Indra's lightning, let decisive action create the power you need.",
+      9: "Choose the path that brings beauty and prosperity. Trust that abundance is your birthright and act accordingly.",
+      10: "Your gut feeling is speaking - listen to it. Beyond logic lies ancient wisdom that your body already knows.",
+      11: "It's time to build something new. Plan carefully, gather your resources, and create your solution step by step.",
+      12: "Do what is right, even if difficult. Your moral compass knows the answer - choose integrity over convenience.",
+      13: "Release your need to control the outcome. Time is your ally - practice acceptance and let clarity emerge.",
+      14: "Cut through all illusions and face the raw truth. Embrace the transformation, however uncomfortable it may be."
     };
     
     return fallbackSolutions[pathId] || "The universe has a unique message for your situation. Trust in the wisdom of this path.";
   };
 
-  const handleCardSelect = (cardIndex) => {
+  const generateSolutions = async (userDilemma) => {
+    setIsLoading(true);
+    
+    const preparedSolutions = paths.map(path => ({
+      ...path,
+      solution: null
+    }));
+    
+    setSolutions(preparedSolutions);
+    setIsLoading(false);
+    setCurrentStep(3);
+  };
+
+  const handleCardSelect = async (cardIndex) => {
     if (selectedCard !== null) return;
     
     setSelectedCard(cardIndex);
     const selectedPath = solutions[cardIndex];
-    setRevealedSolution(selectedPath);
+    setIsGeneratingSolution(true);
     
-    // Delay the card reveal animation
+    try {
+      console.log(`Generating solution for selected path: ${selectedPath.name}`);
+      const generatedSolution = await generateSolutionForPath(selectedPath, dilemma);
+      
+      const pathWithSolution = {
+        ...selectedPath,
+        solution: generatedSolution
+      };
+      
+      setRevealedSolution(pathWithSolution);
+    } catch (error) {
+      console.error('Error generating solution for selected path:', error);
+      const pathWithFallback = {
+        ...selectedPath,
+        solution: getFallbackSolution(selectedPath.id)
+      };
+      setRevealedSolution(pathWithFallback);
+    }
+    
+    setIsGeneratingSolution(false);
+    
     setTimeout(() => {
       setCardsRevealed(true);
       setCurrentStep(5);
@@ -216,13 +221,21 @@ Respond as if you are an wise oracle speaking directly to the seeker.`;
           placeholder="Share your dilemma, challenge, or decision you're facing..."
           className="w-full h-32 p-4 rounded-lg bg-purple-700/50 text-white placeholder-purple-300 border border-purple-500 focus:outline-none focus:ring-2 focus:ring-yellow-400"
         />
-        <button
-          onClick={() => generateSolutions(dilemma)}
-          disabled={!dilemma.trim()}
-          className="bg-gradient-to-r from-yellow-400 to-orange-500 text-purple-900 px-8 py-3 rounded-lg font-semibold hover:from-yellow-300 hover:to-orange-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-        >
-          Seek Cosmic Wisdom
-        </button>
+        <div className="flex gap-4 justify-center">
+          <button
+            onClick={() => generateSolutions(dilemma)}
+            disabled={!dilemma.trim()}
+            className="bg-gradient-to-r from-yellow-400 to-orange-500 text-purple-900 px-8 py-3 rounded-lg font-semibold hover:from-yellow-300 hover:to-orange-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          >
+            Seek Cosmic Wisdom
+          </button>
+          <button
+            onClick={testAPI}
+            className="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-green-400 hover:to-green-500 transition-all"
+          >
+            Test API
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -232,7 +245,7 @@ Respond as if you are an wise oracle speaking directly to the seeker.`;
       <div className="space-y-4">
         <Sparkles className="mx-auto w-16 h-16 text-yellow-400 animate-spin" />
         <h2 className="text-3xl font-bold text-white">The Universe is Listening...</h2>
-        <p className="text-purple-200">Channeling ancient wisdom for your path</p>
+        <p className="text-purple-200">Preparing the cosmic cards for your journey</p>
       </div>
       
       <div className="bg-purple-800/30 backdrop-blur-sm rounded-lg p-8">
@@ -241,7 +254,6 @@ Respond as if you are an wise oracle speaking directly to the seeker.`;
           <div className="h-4 bg-purple-600 rounded w-1/2 mx-auto"></div>
           <div className="h-4 bg-purple-600 rounded w-2/3 mx-auto"></div>
         </div>
-        <p className="text-purple-200 mt-6">Consulting the cosmic archives...</p>
       </div>
     </div>
   );
@@ -359,7 +371,6 @@ Respond as if you are an wise oracle speaking directly to the seeker.`;
         {currentStep === 5 && renderStep5()}
       </div>
       
-      {/* Floating particles effect */}
       <div className="fixed inset-0 pointer-events-none">
         {Array.from({ length: 20 }).map((_, i) => (
           <div
