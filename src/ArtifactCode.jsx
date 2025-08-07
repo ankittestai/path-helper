@@ -12,6 +12,7 @@ const AstrologyMentorshipGame = () => {
   const [isGeneratingSolution, setIsGeneratingSolution] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
   const [showInfo, setShowInfo] = useState(false);
+  const [shuffledPaths, setShuffledPaths] = useState([]);
 
   const paths = [
     { id: 1, name: "The Flame of Agni", subtitle: "Act with fire. Follow passion and leap.", theme: "adventurous, impulsive", icon: "🔥" },
@@ -155,10 +156,24 @@ Give 2-3 sentences of clear, actionable guidance.`;
     return fallbackSolutions[pathId] || "The universe has a unique message for your situation. Trust in the wisdom of this path.";
   };
 
+  // Shuffle array function for true randomization
+  const shuffleArray = (array) => {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  };
+
   const generateSolutions = async (userDilemma) => {
     setIsLoading(true);
     
-    const preparedSolutions = paths.map(path => ({
+    // Shuffle the paths for true cosmic randomization
+    const randomizedPaths = shuffleArray(paths);
+    setShuffledPaths(randomizedPaths);
+    
+    const preparedSolutions = randomizedPaths.map(path => ({
       ...path,
       solution: null
     }));
@@ -206,6 +221,7 @@ Give 2-3 sentences of clear, actionable guidance.`;
     setCurrentStep(1);
     setDilemma('');
     setSolutions([]);
+    setShuffledPaths([]);
     setSelectedCard(null);
     setRevealedSolution(null);
     setIsLoading(false);
@@ -359,7 +375,7 @@ Give 2-3 sentences of clear, actionable guidance.`;
       <div className="space-y-4">
         <Eye className="mx-auto w-16 h-16 text-yellow-400" />
         <h2 className="text-3xl font-bold text-white">Choose Your Destiny</h2>
-        <p className="text-purple-200">14 paths await. Trust your intuition and select one card.</p>
+        <p className="text-purple-200">14 paths await. Trust your intuition and select one card. The cosmic forces have shuffled the paths - your choice will reveal your destined guidance.</p>
       </div>
       
       <div className="grid grid-cols-7 gap-4 max-w-4xl mx-auto">
