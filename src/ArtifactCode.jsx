@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, Eye, Flame, Clock, Moon, Star, Sun } from 'lucide-react';
+import { Sparkles, Eye, Flame, Clock, Moon, Star, Sun, Info, X } from 'lucide-react';
 
 const AstrologyMentorshipGame = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -10,6 +10,8 @@ const AstrologyMentorshipGame = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [cardsRevealed, setCardsRevealed] = useState(false);
   const [isGeneratingSolution, setIsGeneratingSolution] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(true);
+  const [showInfo, setShowInfo] = useState(false);
 
   const paths = [
     { id: 1, name: "The Flame of Agni", subtitle: "Act with fire. Follow passion and leap.", theme: "adventurous, impulsive", icon: "🔥" },
@@ -113,7 +115,7 @@ Give 2-3 sentences of clear, actionable guidance.`;
           console.log('Raw API response:', data);
           
           const content = data.choices?.[0]?.message?.content?.trim();
-          if (content && content.length > 20) { // Ensure we got meaningful content
+          if (content && content.length > 20) {
             console.log(`✨ SUCCESS! AI guidance from ${path.name}:`, content);
             return content;
           } else {
@@ -209,7 +211,103 @@ Give 2-3 sentences of clear, actionable guidance.`;
     setIsLoading(false);
     setCardsRevealed(false);
     setIsGeneratingSolution(false);
+    setShowInfo(false);
   };
+
+  const renderWelcomePopup = () => (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-6 z-50">
+      <div className="bg-gradient-to-br from-purple-900 to-indigo-900 rounded-2xl p-8 max-w-2xl max-h-[90vh] overflow-y-auto border border-purple-500/50">
+        <div className="text-center mb-6">
+          <Star className="mx-auto w-12 h-12 text-yellow-400 mb-4" />
+          <h2 className="text-3xl font-bold text-white mb-2">Welcome to Cosmic Guidance</h2>
+          <p className="text-purple-200">Ancient wisdom for modern dilemmas</p>
+        </div>
+        
+        <div className="text-purple-100 space-y-4 text-left">
+          <p>
+            Since ancient times, wise seekers have understood that every dilemma has <strong className="text-yellow-300">14 sacred paths</strong> to resolution. Each path draws from the profound wisdom of Hindu mythology and offers a unique perspective to guide your journey.
+          </p>
+          
+          <div className="bg-purple-800/30 rounded-lg p-4">
+            <h3 className="text-yellow-300 font-semibold mb-3">The 14 Sacred Paths:</h3>
+            <div className="grid grid-cols-1 gap-2 text-sm">
+              {paths.map(path => (
+                <div key={path.id} className="flex items-center space-x-2">
+                  <span className="text-lg">{path.icon}</span>
+                  <span className="font-medium">{path.name}</span>
+                  <span className="text-purple-300">- {path.subtitle}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          <p>
+            But here lies the magic: <strong className="text-yellow-300">your stars and virtue will guide you</strong> to choose exactly the path your soul needs. When you select a card, the universe conspires to reveal the wisdom meant specifically for you.
+          </p>
+          
+          <p>
+            Share your dilemma, trust your intuition, and let cosmic forces guide you to the perfect solution. Your chosen path will provide personalized guidance tailored to your unique situation.
+          </p>
+        </div>
+        
+        <button
+          onClick={() => setShowWelcome(false)}
+          className="w-full mt-6 bg-gradient-to-r from-yellow-400 to-orange-500 text-purple-900 px-6 py-3 rounded-lg font-semibold hover:from-yellow-300 hover:to-orange-400 transition-all"
+        >
+          Begin Your Journey
+        </button>
+      </div>
+    </div>
+  );
+
+  const renderInfoPopup = () => (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-6 z-50">
+      <div className="bg-gradient-to-br from-purple-900 to-indigo-900 rounded-2xl p-8 max-w-2xl max-h-[90vh] overflow-y-auto border border-purple-500/50">
+        <div className="flex justify-between items-start mb-6">
+          <div>
+            <h2 className="text-2xl font-bold text-white mb-2">About Cosmic Guidance</h2>
+            <p className="text-purple-200">The wisdom of 14 sacred paths</p>
+          </div>
+          <button
+            onClick={() => setShowInfo(false)}
+            className="text-purple-300 hover:text-white transition-colors"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+        
+        <div className="text-purple-100 space-y-4 text-left">
+          <p>
+            Every life challenge can be approached through <strong className="text-yellow-300">14 sacred paths</strong>, each rooted in ancient Hindu wisdom and mythology. These paths represent different energies, approaches, and perspectives for finding solutions.
+          </p>
+          
+          <div className="bg-purple-800/30 rounded-lg p-4">
+            <h3 className="text-yellow-300 font-semibold mb-3">The 14 Sacred Paths:</h3>
+            <div className="grid grid-cols-1 gap-2 text-sm max-h-60 overflow-y-auto">
+              {paths.map(path => (
+                <div key={path.id} className="flex items-start space-x-2">
+                  <span className="text-lg mt-0.5">{path.icon}</span>
+                  <div>
+                    <span className="font-medium text-yellow-200">{path.name}</span>
+                    <div className="text-purple-300 text-xs">{path.subtitle}</div>
+                    <div className="text-purple-400 text-xs italic">({path.theme})</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          <p>
+            <strong className="text-yellow-300">The cosmic principle:</strong> Your stars, virtue, and inner wisdom will naturally draw you to select the card that contains exactly the guidance your soul needs at this moment.
+          </p>
+          
+          <p className="text-sm text-purple-300 italic">
+            Trust the process. The universe has a way of revealing the perfect path when you're ready to receive it.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
 
   const renderStep1 = () => (
     <div className="text-center space-y-8">
@@ -362,6 +460,20 @@ Give 2-3 sentences of clear, actionable guidance.`;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-6">
+      {/* Info Button */}
+      <button
+        onClick={() => setShowInfo(true)}
+        className="fixed top-6 right-6 z-40 bg-purple-700/50 backdrop-blur-sm rounded-full p-3 text-purple-200 hover:text-white hover:bg-purple-600/50 transition-all"
+      >
+        <Info className="w-6 h-6" />
+      </button>
+
+      {/* Welcome Popup */}
+      {showWelcome && renderWelcomePopup()}
+      
+      {/* Info Popup */}
+      {showInfo && renderInfoPopup()}
+
       <div className="max-w-6xl mx-auto">
         {currentStep === 1 && renderStep1()}
         {(currentStep === 2 || isLoading) && renderStep2()}
