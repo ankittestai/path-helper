@@ -78,13 +78,15 @@ const AstrologyMentorshipGame = () => {
       "meta/llama-3.1-8b-instruct"
     ];
 
-    const prompt = `You are an ancient mystic advisor channeling the wisdom of Hindu mythology. A person seeks guidance for this dilemma: "${dilemma}"
+    const prompt = `You are a practical life advisor who draws wisdom from "${path.name}" - ${path.subtitle}
 
-Your path is "${path.name}" - ${path.subtitle}
+A person needs help with: "${dilemma}"
 
-Channel the energy of ${path.theme} and provide specific, actionable mystical guidance. Speak as if you are the embodiment of this mythological path, addressing them directly with 2-3 sentences of practical wisdom that incorporates the symbolism of your path.
+Give them specific, actionable advice that incorporates the theme of ${path.theme}. 
 
-Begin your response directly with the guidance (no preambles like "As the..." or "I am...").`;
+Be direct, helpful, and practical. Focus on what they should DO, not philosophical concepts. Keep it conversational and supportive, like advice from a wise friend who understands this mythological path.
+
+Give 2-3 sentences of clear, actionable guidance.`;
 
     for (const model of modelsToTry) {
       try {
@@ -225,21 +227,13 @@ Begin your response directly with the guidance (no preambles like "As the..." or
           placeholder="Share your dilemma, challenge, or decision you're facing..."
           className="w-full h-32 p-4 rounded-lg bg-purple-700/50 text-white placeholder-purple-300 border border-purple-500 focus:outline-none focus:ring-2 focus:ring-yellow-400"
         />
-        <div className="flex gap-4 justify-center">
-          <button
-            onClick={() => generateSolutions(dilemma)}
-            disabled={!dilemma.trim()}
-            className="bg-gradient-to-r from-yellow-400 to-orange-500 text-purple-900 px-8 py-3 rounded-lg font-semibold hover:from-yellow-300 hover:to-orange-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-          >
-            Seek Cosmic Wisdom
-          </button>
-          <button
-            onClick={testAPI}
-            className="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-green-400 hover:to-green-500 transition-all"
-          >
-            Test API
-          </button>
-        </div>
+        <button
+          onClick={() => generateSolutions(dilemma)}
+          disabled={!dilemma.trim()}
+          className="bg-gradient-to-r from-yellow-400 to-orange-500 text-purple-900 px-8 py-3 rounded-lg font-semibold hover:from-yellow-300 hover:to-orange-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+        >
+          Seek Cosmic Wisdom
+        </button>
       </div>
     </div>
   );
