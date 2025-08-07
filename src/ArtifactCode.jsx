@@ -29,11 +29,10 @@ const AstrologyMentorshipGame = () => {
   ];
 
   const testAPI = async () => {
-    console.log('Testing NVIDIA API via proxy...');
+    console.log('🧪 Testing NVIDIA API via Vercel...');
     
     try {
-      // You'll need to replace this with your backend URL
-     const PROXY_URL = 'https://path-helper.vercel.app/api/nvidia';
+      const PROXY_URL = 'https://path-helper.vercel.app/api/nvidia';
       
       const testPayload = {
         "model": "meta/llama-3.1-405b-instruct",
@@ -42,7 +41,7 @@ const AstrologyMentorshipGame = () => {
         "temperature": 0.1
       };
       
-      console.log('Sending test request to proxy:', testPayload);
+      console.log('Sending test request to Vercel API:', testPayload);
       
       const response = await fetch(PROXY_URL, {
         method: "POST",
@@ -57,39 +56,39 @@ const AstrologyMentorshipGame = () => {
       if (response.ok) {
         const data = await response.json();
         console.log('Parsed response:', data);
-        alert(`API Test Success! Response: ${data.choices?.[0]?.message?.content || 'No content'}`);
+        alert(`✅ API Test Success! Response: ${data.choices?.[0]?.message?.content || 'No content'}`);
       } else {
         const errorText = await response.text();
         console.error('API Test Failed:', response.status, errorText);
-        alert(`API Test Failed: ${response.status} - ${errorText}`);
+        alert(`❌ API Test Failed: ${response.status} - ${errorText}`);
       }
       
     } catch (error) {
       console.error('API Test Error:', error);
-      alert(`Cannot connect to backend server. Please set up a proxy server first.\n\nError: ${error.message}`);
+      alert(`❌ Connection Error: ${error.message}`);
     }
   };
 
   const generateSolutionForPath = async (path, dilemma) => {
-    // You'll need to replace this with your backend URL
-    const PROXY_URL = 'http://localhost:3001/api/nvidia'; // Replace with your backend
+    const PROXY_URL = 'https://path-helper.vercel.app/api/nvidia';
     
     const modelsToTry = [
       "meta/llama-3.1-405b-instruct",
       "meta/llama-3.1-70b-instruct", 
-      "meta/llama-3.1-8b-instruct",
-      "nvidia/llama-3.1-nemotron-70b-instruct"
+      "meta/llama-3.1-8b-instruct"
     ];
 
-    const prompt = `You are an ancient mystic advisor. A person faces this dilemma: "${dilemma}"
+    const prompt = `You are an ancient mystic advisor channeling the wisdom of Hindu mythology. A person seeks guidance for this dilemma: "${dilemma}"
 
-Give guidance for the path of "${path.name}" - ${path.subtitle} (${path.theme}).
+Your path is "${path.name}" - ${path.subtitle}
 
-Provide 2-3 sentences of mystical but practical advice.`;
+Channel the energy of ${path.theme} and provide specific, actionable mystical guidance. Speak as if you are the embodiment of this mythological path, addressing them directly with 2-3 sentences of practical wisdom that incorporates the symbolism of your path.
+
+Begin your response directly with the guidance (no preambles like "As the..." or "I am...").`;
 
     for (const model of modelsToTry) {
       try {
-        console.log(`Trying model: ${model} for ${path.name}...`);
+        console.log(`🔮 Channeling ${path.name} with model: ${model}...`);
 
         const response = await fetch(PROXY_URL, {
           method: "POST",
@@ -99,8 +98,9 @@ Provide 2-3 sentences of mystical but practical advice.`;
           body: JSON.stringify({
             "model": model,
             "messages": [{"role": "user", "content": prompt}],
-            "max_tokens": 200,
-            "temperature": 0.7
+            "max_tokens": 150,
+            "temperature": 0.8,
+            "top_p": 0.9
           })
         });
 
@@ -108,10 +108,14 @@ Provide 2-3 sentences of mystical but practical advice.`;
 
         if (response.ok) {
           const data = await response.json();
+          console.log('Raw API response:', data);
+          
           const content = data.choices?.[0]?.message?.content?.trim();
-          if (content) {
-            console.log(`Success with ${model}:`, content);
+          if (content && content.length > 20) { // Ensure we got meaningful content
+            console.log(`✨ SUCCESS! AI guidance from ${path.name}:`, content);
             return content;
+          } else {
+            console.log(`${model} returned empty/short content:`, content);
           }
         } else {
           const errorText = await response.text();
@@ -122,7 +126,7 @@ Provide 2-3 sentences of mystical but practical advice.`;
       }
     }
     
-    console.log('All models failed or no backend available, using fallback');
+    console.log('❌ All AI models failed, using fallback solution');
     return getFallbackSolution(path.id);
   };
 
